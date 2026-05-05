@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public Grievance Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { background: #f5f5f5; color: #222; }
+
+  
+  nav { background: #fff; border-bottom: 1px solid #ddd; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  nav h1 span { color: #c0392b; }
+
+  
+  .page { display: none; }
+  .page.active { display: block; }
+
+  
+  .hero { max-width: 500px; margin: 80px auto; text-align: center; padding: 0 20px; }
+  .hero h2 { font-size: 2rem; margin-bottom: 12px; }
+  .hero p { color: #666; margin-bottom: 32px; line-height: 1.6; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  
+  .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .btn:hover { opacity: 0.85; }
+  .btn-red  { background: #c0392b; color: #fff; }
+  .btn-out  { background: #fff; color: #222; border: 1.5px solid #ccc; }
+  .btn-dark { background: #222; color: #fff; padding: 9px 20px; font-size: 0.82rem; }
+  .btn-full { width: 100%; margin-top: 16px; padding: 12px; }
+  .btn-sm   { padding: 7px 14px; font-size: 0.75rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; }
+
+  
+  .wrap  { max-width: 480px; margin: 50px auto; padding: 0 20px; }
+  .back  { background: none; border: none; color: #888; cursor: pointer; font-size: 0.85rem; margin-bottom: 20px; display: block; }
+  .card  { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 28px; }
+  .card h2 { margin-bottom: 6px; }
+  .card > p { color: #888; font-size: 0.85rem; margin-bottom: 20px; }
+  label  { display: block; font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; margin: 14px 0 5px; }
+  input, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 0.88rem; outline: none; background: #fafafa; font-family: Arial, sans-serif; }
+  input:focus, textarea:focus { border-color: #c0392b; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  
+  .result-box { margin-top: 18px; border-radius: 10px; padding: 16px 20px; display: none; }
+  .result-green { background: #eaf4ef; border: 1.5px solid #b7dece; }
+  .result-red   { background: #fdf0ee; border: 1.5px solid #f5c6c0; }
+  .result-box .tid { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+  .result-green .tid { color: #1e6f4e; }
+  .result-red   .tid { color: #c0392b; }
+  .result-box small  { font-size: 0.8rem; color: #555; display: block; margin-bottom: 10px; }
+
+  
+  .s-card { margin-top: 18px; background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 16px 20px; display: none; }
+  .s-row  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .s-id   { font-weight: 700; font-size: 1.1rem; }
+  .badge  { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .b-review   { background: #e2e3f3; color: #4a4a9a; }
+  .b-progress { background: #fff3cd; color: #856404; }
+  .b-done     { background: #eaf4ef; color: #1e6f4e; }
+  .b-private  { background: #fdf0ee; color: #c0392b; }
+  .s-title { font-weight: 600; margin-bottom: 4px; }
+  .s-prob  { color: #777; font-size: 0.85rem; line-height: 1.5; }
+
+  
+  #adminScreen { display: none; position: fixed; inset: 0; background: #1a1714; z-index: 999; align-items: center; justify-content: center; }
+  #adminScreen.active { display: flex; }
+  .login-box h2 { color: #fff; font-size: 1.8rem; margin-bottom: 6px; }
+  .login-box p  { color: #666; font-size: 0.85rem; margin-bottom: 28px; }
+  .login-box label { color: #777; }
+  .login-box input { background: #2a2724; border-color: #3a3734; color: #fff; }
+  .login-box input:focus { border-color: #c0392b; }
+  .login-box { width: 100%; max-width: 360px; padding: 24px; }
+  .err { color: #c0392b; font-size: 0.8rem; margin-top: 8px; text-align: center; display: none; }
+
+  
+  .admin-wrap { max-width: 680px; margin: 50px auto; padding: 0 24px 60px; }
+  .admin-wrap h2 { margin-bottom: 6px; }
+  .admin-wrap > p { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
+  .p-section { margin-bottom: 28px; }
+  .p-head { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1.5px solid #eee; margin-bottom: 12px; }
+  .dot  { width: 9px; height: 9px; border-radius: 50%; }
+  .d-h  { background: #e74c3c; } .d-m { background: #e67e22; }
+  .d-l  { background: #27ae60; } .d-p { background: #aaa; }
+  .p-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+  .a-ticket { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .a-ticket.done { opacity: 0.4; }
+  .a-info  { flex: 1; min-width: 0; }
+  .a-id    { font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; }
+  .a-title { color: #555; font-size: 0.82rem; margin-bottom: 4px; font-weight: 600; }
+  .a-prob  { color: #888; font-size: 0.78rem; line-height: 1.5; word-break: break-word; }
+  .a-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .done-tag { font-size: 0.75rem; font-weight: 700; color: #1e6f4e; }
+  .empty { color: #aaa; font-size: 0.82rem; padding: 10px 0; text-align: center; }
+
+  
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: #222; color: #fff; padding: 10px 22px; border-radius: 8px; font-size: 0.83rem; z-index: 9999; transition: transform 0.3s; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+
+<nav>
+  <h1>Public <span>Grievance</span></h1>
+  <button class="btn btn-dark" onclick="showAdminLogin()">Admin Login</button>
+</nav>
+
+
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h2>Your voice matters.</h2>
+    <p>Report issues with roads, water, electricity or any civic service. Track your grievance in real time.</p>
+    <div class="cta">
+      <button class="btn btn-red" onclick="go('page-submit')">Submit a Ticket</button>
+      <button class="btn btn-out" onclick="go('page-check')">Already Submitted</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="page-submit" class="page">
+  <div class="wrap">
+    <button class="back" onclick="go('page-home')">← Back</button>
+    <div class="card">
+      <h2>Submit Grievance</h2>
+      <p>Fill in your issue details. You will receive a unique Ticket ID.</p>
+
+      <label>Title</label>
+      <input id="s-title" placeholder="e.g. Open drain on MG Road">
+
+      <label>Problem</label>
+      <textarea id="s-problem" placeholder="Describe the problem in detail..."></textarea>
+
+      <label>Location</label>
+      <input id="s-loc" placeholder="e.g. Ward 12, Sector 4">
+
+      <label>Your Name</label>
+      <input id="s-name" placeholder="Your full name">
+
+      <button class="btn btn-red btn-full" id="submit-btn" onclick="submitTicket()">Submit Grievance</button>
+
+      
+      <div class="result-box" id="submit-result">
+        <div class="tid" id="r-tid"></div>
+        <small id="r-note"></small>
+        <div id="track-inline" style="display:none">
+          <input id="inline-tid" readonly style="margin-bottom:8px">
+          <button class="btn btn-out" style="width:100%;padding:10px" onclick="trackInline()">Track This Ticket</button>
+          <div class="s-card" id="inline-status">
+            <div class="s-row"><div class="s-id" id="is-id"></div><div class="badge" id="is-badge"></div></div>
+            <div class="s-title" id="is-title"></div>
+            <div class="s-prob"  id="is-prob"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="page-check" class="page">
+  <div class="wrap">
+    <button class="back" onclick="go('page-home')">← Back</button>
+    <div class="card">
+      <h2>Track Your Ticket</h2>
+      <p>Enter your Ticket ID to see current status.</p>
+
+      <label>Ticket ID</label>
+      <input id="c-tid" placeholder="e.g. GRV-0001">
+      <button class="btn btn-red btn-full" onclick="checkTicket()">Check Status</button>
+
+      <div class="s-card" id="s-card">
+        <div class="s-row"><div class="s-id" id="s-id"></div><div class="badge" id="s-badge"></div></div>
+        <div class="s-title" id="s-title-text"></div>
+        <div class="s-prob"  id="s-prob"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div id="page-admin" class="page">
+  <div class="admin-wrap">
+    <button class="back" onclick="go('page-home')">← Logout</button>
+    <h2>Admin Panel</h2>
+    <p>Tickets sorted by priority. Start, close, or move priority.</p>
+
+    <div class="p-section">
+      <div class="p-head"><div class="dot d-h"></div><div class="p-label" style="color:#e74c3c">High Priority</div></div>
+      <div id="t-high"></div>
+    </div>
+    <div class="p-section">
+      <div class="p-head"><div class="dot d-m"></div><div class="p-label" style="color:#e67e22">Medium Priority</div></div>
+      <div id="t-med"></div>
+    </div>
+    <div class="p-section">
+      <div class="p-head"><div class="dot d-l"></div><div class="p-label" style="color:#27ae60">Low Priority</div></div>
+      <div id="t-low"></div>
+    </div>
+    <div class="p-section">
+      <div class="p-head"><div class="dot d-p"></div><div class="p-label" style="color:#aaa">Rejected / Private</div></div>
+      <div id="t-priv"></div>
+    </div>
+  </div>
+</div>
+
+
+<div id="adminScreen">
+  <div class="login-box">
+    <h2>Admin Access</h2>
+    <p>Restricted to authorized personnel only.</p>
+    <label>Username</label><input id="a-user" placeholder="Enter username">
+    <label style="margin-top:14px">Password</label>
+    <input id="a-pass" type="password" placeholder="Enter password">
+    <div class="err" id="a-err">Incorrect credentials. Try again.</div>
+    <button class="btn btn-red btn-full" onclick="adminLogin()">Login</button>
+    <button class="btn btn-out btn-full" style="margin-top:10px" onclick="hideAdmin()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  scrollTo(0, 0);
+  
+  
+  const submitResult = document.getElementById('submit-result');
+  if (submitResult) submitResult.style.display = 'none';
+  const trackInline = document.getElementById('track-inline');
+  if (trackInline) trackInline.style.display = 'none';
+  const inlineStatus = document.getElementById('inline-status');
+  if (inlineStatus) inlineStatus.style.display = 'none';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+
+async function submitTicket() {
+  const title   = document.getElementById('s-title').value.trim();
+  const problem = document.getElementById('s-problem').value.trim();
+  const loc     = document.getElementById('s-loc').value.trim() || 'NA';
+  const name    = document.getElementById('s-name').value.trim() || 'user';
+
+  if (!title || !problem) { toast('Please fill Title and Problem!'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch(`${API}/tickets?title=${encodeURIComponent(title)}&problem=${encodeURIComponent(problem)}&location=${encodeURIComponent(loc)}&name=${encodeURIComponent(name)}`, { method: 'POST' });
+    const data = await res.json();
+    const box  = document.getElementById('submit-result');
+
+    box.style.display = 'block';
+
+    if (data.category === 'private') {
+      
+      box.className = 'result-box result-red';
+      document.getElementById('r-tid').textContent  = '❌ Ticket Rejected';
+      document.getElementById('r-note').textContent = 'Your issue is not related to a public or government service.';
+      document.getElementById('track-inline').style.display = 'none';
+    } else {
+      
+      box.className = 'result-box result-green';
+      document.getElementById('r-tid').textContent  = '🎫 ' + data.ticket_id;
+      document.getElementById('r-note').textContent = 'Ticket submitted! Track status below or save your ID.';
+      document.getElementById('inline-tid').value   = data.ticket_id;
+      document.getElementById('track-inline').style.display = 'block';
+      ['s-title', 's-problem', 's-loc', 's-name'].forEach(i => document.getElementById(i).value = '');
+    }
+  } catch(e) { toast('Cannot connect to server!'); }
+  finally { btn.textContent = 'Submit Grievance'; btn.disabled = false; }
+}
+
+async function trackInline() {
+  const id = document.getElementById('inline-tid').value.trim();
+  document.getElementById('inline-status').style.display = 'block';
+  await fillStatus(id, 'is-id', 'is-badge', 'is-title', 'is-prob');
+}
+
+
+async function checkTicket() {
+  const id = document.getElementById('c-tid').value.trim();
+  if (!id) { toast('Please enter a Ticket ID!'); return; }
+  document.getElementById('s-card').style.display = 'block';
+  await fillStatus(id, 's-id', 's-badge', 's-title-text', 's-prob');
+}
+
+
+async function fillStatus(id, elId, elBadge, elTitle, elProb) {
+  try {
+    const res = await fetch(`${API}/ticket/${id}`);
+
+    if (res.status === 404) {
+      document.getElementById(elId).textContent    = id;
+      document.getElementById(elBadge).textContent = 'Not Found';
+      document.getElementById(elBadge).className   = 'badge b-private';
+      document.getElementById(elTitle).textContent = '';
+      document.getElementById(elProb).textContent  = 'No ticket found with this ID.';
+      return;
+    }
+
+    const d = await res.json();
+    document.getElementById(elId).textContent    = d.id;
+    document.getElementById(elTitle).textContent = d.title;
+    document.getElementById(elProb).textContent  = d.problem;
+
+    const badge = document.getElementById(elBadge);
+    const statusMap = {
+      'closed':      ['✓ Completed',  'badge b-done'],
+      'in_progress': ['In Progress',  'badge b-progress'],
+      'private':     ['Rejected',     'badge b-private'],
+    };
+    const [text, cls] = statusMap[d.status] || ['Under Review', 'badge b-review'];
+    badge.textContent = text;
+    badge.className   = cls;
+
+  } catch(e) { toast('Cannot connect to server!'); }
+}
+
+
+function showAdminLogin() {
+  document.getElementById('adminScreen').classList.add('active');
+  document.getElementById('a-err').style.display = 'none';
+  document.getElementById('a-user').value = '';
+  document.getElementById('a-pass').value = '';
+}
+
+function hideAdmin() {
+  document.getElementById('adminScreen').classList.remove('active');
+}
+
+async function adminLogin() {
+  const u = document.getElementById('a-user').value;
+  const p = document.getElementById('a-pass').value;
+  try {
+    const res  = await fetch(`${API}/admin/login?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'success') { hideAdmin(); go('page-admin'); loadTickets(); }
+    else document.getElementById('a-err').style.display = 'block';
+  } catch(e) { toast('Server not reachable!'); }
+}
+
+
+async function loadTickets() {
+  try {
+    const data = await (await fetch(`${API}/admin/tickets`)).json();
+    render('t-high', data.filter(t => t.priority === 'high'   && t.category === 'public'));
+    render('t-med',  data.filter(t => t.priority === 'medium' && t.category === 'public'));
+    render('t-low',  data.filter(t => t.priority === 'low'    && t.category === 'public'));
+    render('t-priv', data.filter(t => t.category === 'private'), true);
+  } catch(e) { toast('Could not load tickets!'); }
+}
+
+
+function render(id, tickets, isPrivate = false) {
+  const el = document.getElementById(id);
+  if (!tickets.length) { el.innerHTML = '<div class="empty">No tickets</div>'; return; }
+
+  el.innerHTML = tickets.map(t => `
+    <div class="a-ticket ${t.status === 'closed' ? 'done' : ''}">
+      <div class="a-info">
+        <div class="a-id">${t.id} · <span style="font-weight:400;color:#888">${t.name || 'user'}</span> · <span style="color:#c0392b;font-weight:600">📍 ${t.location || 'NA'}</span></div>
+        <div class="a-title">${t.title}</div>
+        <div class="a-prob">${t.problem}</div>
+      </div>
+      <div class="a-actions">
+        ${isPrivate
+          ? '<div style="font-size:0.75rem;color:#aaa">Rejected</div>'
+          : t.status === 'closed'
+            ? '<div class="done-tag">✓ Done</div>'
+            : `
+              ${t.status === 'staging'     ? `<button class="btn btn-sm" style="background:#e2e3f3;color:#4a4a9a" onclick="move('${t.id}','in_progress')">Start</button>` : ''}
+              ${t.status === 'in_progress' ? `<button class="btn btn-sm" style="background:#eaf4ef;color:#1e6f4e" onclick="move('${t.id}','closed')">Done</button>` : ''}
+              ${t.priority !== 'high' ? `<button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="movePriority('${t.id}','high')">↑ High</button>` : ''}
+              ${t.priority !== 'medium' ? `<button class="btn btn-sm" style="background:#fef5e7;color:#e67e22" onclick="movePriority('${t.id}','medium')">→ Med</button>` : ''}
+              ${t.priority !== 'low'  ? `<button class="btn btn-sm" style="background:#f5f5f5;color:#555"    onclick="movePriority('${t.id}','low')">↓ Low</button>`  : ''}
+            `
+        }
+      </div>
+    </div>`).join('');
+}
+
+
+async function move(id, status) {
+  try { await fetch(`${API}/admin/tickets/${id}?status=${status}`, { method: 'PATCH' }); toast('✓ Status updated'); loadTickets(); }
+  catch(e) { toast('Update failed!'); }
+}
+
+async function movePriority(id, priority) {
+  try { await fetch(`${API}/admin/tickets/${id}?priority=${priority}`, { method: 'PATCH' }); toast('✓ Priority changed'); loadTickets(); }
+  catch(e) { toast('Update failed!'); }
+}
+</script>
+</body>
+</html>
